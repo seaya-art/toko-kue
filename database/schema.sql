@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 11, 2026 at 05:16 AM
+-- Generation Time: Nov 11, 2026 at 02:05 PM
 -- Server version: 10.11.16-MariaDB
 -- PHP Version: 8.4.27
 
@@ -83,6 +83,19 @@ CREATE TABLE `kuota_tanggal` (
   `kategori` enum('kering','ultah') NOT NULL,
   `batas` int(11) NOT NULL,
   `satuan` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `login_gagal`
+--
+
+CREATE TABLE `login_gagal` (
+  `id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `ip` varchar(45) NOT NULL,
+  `waktu` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -222,6 +235,13 @@ ALTER TABLE `kuota_tanggal`
   ADD UNIQUE KEY `tanggal` (`tanggal`,`kategori`);
 
 --
+-- Indexes for table `login_gagal`
+--
+ALTER TABLE `login_gagal`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ip` (`ip`,`waktu`);
+
+--
 -- Indexes for table `menu`
 --
 ALTER TABLE `menu`
@@ -291,6 +311,12 @@ ALTER TABLE `item_pesanan`
 --
 ALTER TABLE `kuota_tanggal`
   MODIFY `id_kuota` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `login_gagal`
+--
+ALTER TABLE `login_gagal`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `menu`

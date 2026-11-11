@@ -3,3 +3,7 @@ config.php
 *.log
 toko_kue.sql
 *_backup.sql
+laporan/db_config.py
+*.xlsx
+__pycache__/
+*.pyc

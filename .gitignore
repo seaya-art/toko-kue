@@ -1,0 +1,5 @@
+config.php
+.env
+*.log
+toko_kue.sql
+*_backup.sql

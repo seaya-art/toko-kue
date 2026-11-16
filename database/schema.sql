@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 16, 2026 at 07:40 AM
+-- Generation Time: Nov 16, 2026 at 09:24 AM
 -- Server version: 10.11.16-MariaDB
 -- PHP Version: 8.4.27
 
@@ -185,7 +185,8 @@ CREATE TABLE `pesanan` (
   `status_dp` enum('dikembalikan','hangus') DEFAULT NULL,
   `alasan_batal` text DEFAULT NULL,
   `dibuat_oleh` int(11) DEFAULT NULL,
-  `catatan` text DEFAULT NULL
+  `catatan` text DEFAULT NULL,
+  `kunci` char(32) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -275,6 +276,7 @@ ALTER TABLE `pengguna`
 --
 ALTER TABLE `pesanan`
   ADD PRIMARY KEY (`id_pesanan`),
+  ADD UNIQUE KEY `kunci` (`kunci`),
   ADD KEY `id_pembeli` (`id_pembeli`),
   ADD KEY `id_alamat` (`id_alamat`),
   ADD KEY `id_zona` (`id_zona`),

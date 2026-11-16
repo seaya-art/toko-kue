@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../koneksi.php';
 require __DIR__ . '/../auth.php';
+echo $tidakAda;
 wajib_login();
 
 $sql = "SELECT p.id_pesanan, b.nama, p.tanggal_ambil, p.sumber,

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 11, 2026 at 02:05 PM
+-- Generation Time: Nov 16, 2026 at 07:40 AM
 -- Server version: 10.11.16-MariaDB
 -- PHP Version: 8.4.27
 
@@ -53,7 +53,8 @@ CREATE TABLE `catatan_transaksi` (
   `jumlah` int(11) NOT NULL,
   `jenis` enum('tf','qris','cash') NOT NULL,
   `tanggal_bayar` datetime NOT NULL DEFAULT current_timestamp(),
-  `dikonfirmasi_oleh` int(11) DEFAULT NULL
+  `dikonfirmasi_oleh` int(11) DEFAULT NULL,
+  `kunci` char(32) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -216,6 +217,7 @@ ALTER TABLE `alamat_pembeli`
 --
 ALTER TABLE `catatan_transaksi`
   ADD PRIMARY KEY (`id_pembayaran`),
+  ADD UNIQUE KEY `kunci` (`kunci`),
   ADD KEY `id_pesanan` (`id_pesanan`),
   ADD KEY `dikonfirmasi_oleh` (`dikonfirmasi_oleh`);
 

@@ -117,7 +117,8 @@ $lanjut = isset($alur[$pesanan['status_pesanan']]) ? $alur[$pesanan['status_pesa
   <?php if ($pesanan['status_pesanan'] !== 'dibatalkan' && $sisa > 0): ?>
   <h3>Catat pembayaran</h3>
   <p>Saran DP sesuai pengaturan: <?= rp($saranDp) ?></p>
-  <form method="post" action="catat_bayar.php">
+    <form method="post" action="catat_bayar.php" onsubmit="this.querySelector('button').disabled = true">
+    <input type="hidden" name="kunci" value="<?= bin2hex(random_bytes(16)) ?>">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
     <input type="hidden" name="id" value="<?= $id ?>">
     <input type="number" name="jumlah" min="1" max="<?= (int) $sisa ?>"

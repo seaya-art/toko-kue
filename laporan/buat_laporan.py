@@ -12,7 +12,7 @@ RUPIAH = '"Rp"#,##0'
 
 # subquery total pembayaran per pesanan
 TERBAYAR = """(SELECT id_pesanan, SUM(jumlah) AS terbayar
-               FROM catatan_transaksi GROUP BY id_pesanan) t"""
+               FROM catatan_transaksi WHERE dibatalkan = 0 GROUP BY id_pesanan) t"""
 
 
 def hitung_periode(jenis, acuan):
@@ -74,7 +74,8 @@ def main():
             uang_masuk = ambil(cur, """
                 SELECT CAST(COALESCE(SUM(jumlah), 0) AS SIGNED)
                 FROM catatan_transaksi
-                WHERE DATE(tanggal_bayar) BETWEEN %s AND %s""", p)[0][0]
+                WHERE DATE(tanggal_bayar) BETWEEN %s AND %s
+                  AND dibatalkan = 0""", p)[0][0]
 
             sisa_periode = ambil(cur, f"""
                 SELECT CAST(COALESCE(SUM(p.total - COALESCE(t.terbayar, 0)), 0) AS SIGNED)

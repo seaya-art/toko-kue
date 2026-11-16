@@ -48,7 +48,8 @@ try {
     exit('Tunai hanya untuk pesanan ambil di toko.');
 }
 
-    $stmt = $pdo->prepare("SELECT COALESCE(SUM(jumlah), 0) FROM catatan_transaksi WHERE id_pesanan = ?");
+   $stmt = $pdo->prepare("SELECT COALESCE(SUM(jumlah), 0) FROM catatan_transaksi
+        WHERE id_pesanan = ? AND dibatalkan = 0");
     $stmt->execute([$id]);
     $terbayar = (int) $stmt->fetchColumn();
     $sisa = (int) $p['total'] - $terbayar;

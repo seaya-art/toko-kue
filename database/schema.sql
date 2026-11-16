@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 16, 2026 at 09:24 AM
+-- Generation Time: Nov 16, 2026 at 09:59 AM
 -- Server version: 10.11.16-MariaDB
 -- PHP Version: 8.4.27
 
@@ -54,7 +54,11 @@ CREATE TABLE `catatan_transaksi` (
   `jenis` enum('tf','qris','cash') NOT NULL,
   `tanggal_bayar` datetime NOT NULL DEFAULT current_timestamp(),
   `dikonfirmasi_oleh` int(11) DEFAULT NULL,
-  `kunci` char(32) DEFAULT NULL
+  `kunci` char(32) DEFAULT NULL,
+  `dibatalkan` tinyint(1) NOT NULL DEFAULT 0,
+  `alasan_koreksi` varchar(255) DEFAULT NULL,
+  `dibatalkan_oleh` int(11) DEFAULT NULL,
+  `waktu_dibatalkan` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -220,7 +224,8 @@ ALTER TABLE `catatan_transaksi`
   ADD PRIMARY KEY (`id_pembayaran`),
   ADD UNIQUE KEY `kunci` (`kunci`),
   ADD KEY `id_pesanan` (`id_pesanan`),
-  ADD KEY `dikonfirmasi_oleh` (`dikonfirmasi_oleh`);
+  ADD KEY `dikonfirmasi_oleh` (`dikonfirmasi_oleh`),
+  ADD KEY `dibatalkan_oleh` (`dibatalkan_oleh`);
 
 --
 -- Indexes for table `item_pesanan`
@@ -373,7 +378,8 @@ ALTER TABLE `alamat_pembeli`
 --
 ALTER TABLE `catatan_transaksi`
   ADD CONSTRAINT `catatan_transaksi_ibfk_1` FOREIGN KEY (`id_pesanan`) REFERENCES `pesanan` (`id_pesanan`),
-  ADD CONSTRAINT `catatan_transaksi_ibfk_2` FOREIGN KEY (`dikonfirmasi_oleh`) REFERENCES `pengguna` (`id_pengguna`);
+  ADD CONSTRAINT `catatan_transaksi_ibfk_2` FOREIGN KEY (`dikonfirmasi_oleh`) REFERENCES `pengguna` (`id_pengguna`),
+  ADD CONSTRAINT `catatan_transaksi_ibfk_3` FOREIGN KEY (`dibatalkan_oleh`) REFERENCES `pengguna` (`id_pengguna`);
 
 --
 -- Constraints for table `item_pesanan`

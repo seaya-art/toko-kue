@@ -13,7 +13,7 @@ $pesanan = $pdo->query($sql)->fetchAll();
 
 $sqlBelum = "SELECT p.id_pesanan, b.nama, p.tanggal_ambil, p.status_bayar, p.total,
                     COALESCE((SELECT SUM(t.jumlah) FROM catatan_transaksi t
-                              WHERE t.id_pesanan = p.id_pesanan), 0) AS terbayar
+          WHERE t.id_pesanan = p.id_pesanan AND t.dibatalkan = 0), 0) AS terbayar
              FROM pesanan p
              JOIN pembeli b ON b.id_pembeli = p.id_pembeli
              WHERE p.status_pesanan <> 'dibatalkan' AND p.status_bayar <> 'lunas'

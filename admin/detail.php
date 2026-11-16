@@ -24,16 +24,18 @@ $stmt = $pdo->prepare("SELECT m.nama_kue, i.jumlah, i.harga_satuan, i.catatan
 $stmt->execute([$id]);
 $items = $stmt->fetchAll();
 
-$stmt = $pdo->prepare("SELECT jumlah, jenis, tanggal_bayar
+$stmt = $pdo->prepare("SELECT id_pembayaran, jumlah, jenis, tanggal_bayar, dibatalkan, alasan_koreksi
                        FROM catatan_transaksi
                        WHERE id_pesanan = ?
-                       ORDER BY tanggal_bayar");
+                       ORDER BY tanggal_bayar, id_pembayaran");
 $stmt->execute([$id]);
 $bayar = $stmt->fetchAll();
 
 $terbayar = 0;
 foreach ($bayar as $b) {
-    $terbayar += $b['jumlah'];
+    if (!$b['dibatalkan']) {
+        $terbayar += $b['jumlah'];
+    }
 }
 $sisa = $pesanan['total'] - $terbayar;
 
@@ -101,13 +103,31 @@ $lanjut = isset($alur[$pesanan['status_pesanan']]) ? $alur[$pesanan['status_pesa
      <strong>Total: <?= rp($pesanan['total']) ?></strong></p>
 
   <h2>Pembayaran</h2>
-  <table border="1" cellpadding="6">
-    <tr><th>Tanggal</th><th>Jenis</th><th>Jumlah</th></tr>
+    <table border="1" cellpadding="6">
+    <tr><th>Tanggal</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th></tr>
     <?php foreach ($bayar as $b): ?>
     <tr>
-      <td><?= htmlspecialchars($b['tanggal_bayar']) ?></td>
-      <td><?= htmlspecialchars($b['jenis']) ?></td>
-      <td><?= rp($b['jumlah']) ?></td>
+      <?php if ($b['dibatalkan']): ?>
+        <td><s><?= htmlspecialchars($b['tanggal_bayar']) ?></s></td>
+        <td><s><?= htmlspecialchars($b['jenis']) ?></s></td>
+        <td><s><?= rp($b['jumlah']) ?></s></td>
+        <td>Dibatalkan: <?= htmlspecialchars($b['alasan_koreksi']) ?></td>
+      <?php else: ?>
+        <td><?= htmlspecialchars($b['tanggal_bayar']) ?></td>
+        <td><?= htmlspecialchars($b['jenis']) ?></td>
+        <td><?= rp($b['jumlah']) ?></td>
+        <td>
+          <?php if ($_SESSION['peran'] === 'owner' && $pesanan['status_pesanan'] !== 'dibatalkan'): ?>
+          <form method="post" action="batal_bayar.php"
+                onsubmit="return confirm('Batalkan pembayaran ini?')">
+            <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+            <input type="hidden" name="id_pembayaran" value="<?= (int) $b['id_pembayaran'] ?>">
+            <input name="alasan" placeholder="Alasan koreksi" maxlength="255" required>
+            <button type="submit">Batalkan</button>
+          </form>
+          <?php endif; ?>
+        </td>
+      <?php endif; ?>
     </tr>
     <?php endforeach; ?>
   </table>

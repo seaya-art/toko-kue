@@ -150,15 +150,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $idPembeli = (int) $pdo->lastInsertId();
             }
 
-            $idAlamat = null;
+                        $idAlamat = null;
             if ($cara === 'antar') {
-                $pdo->prepare("INSERT INTO alamat_pembeli
-                (id_pembeli, nama_jalan, rt_rw, no_rumah, kelurahan, kecamatan, kota_kabupaten, patokan)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-                ->execute([$idPembeli, $alamat['nama_jalan'], $alamat['rt'] . '/' . $alamat['rw'],
-                           $alamat['no_rumah'], $alamat['kelurahan'], $alamat['kecamatan'],
-                           $alamat['kota_kabupaten'], $alamat['patokan'] !== '' ? $alamat['patokan'] : null]);
-                $idAlamat = (int) $pdo->lastInsertId();
+                $rtrw = $alamat['rt'] . '/' . $alamat['rw'];
+
+                // pakai alamat lama kalau pelanggan ini sudah punya yang sama persis
+                $stmt = $pdo->prepare("SELECT id_alamat FROM alamat_pembeli
+                    WHERE id_pembeli = ? AND nama_jalan = ? AND rt_rw = ? AND no_rumah = ?
+                      AND kelurahan = ? AND kecamatan = ? AND kota_kabupaten = ?
+                    LIMIT 1");
+                $stmt->execute([$idPembeli, $alamat['nama_jalan'], $rtrw, $alamat['no_rumah'],
+                                $alamat['kelurahan'], $alamat['kecamatan'], $alamat['kota_kabupaten']]);
+                $idAlamat = $stmt->fetchColumn();
+
+                if ($idAlamat) {
+                    $idAlamat = (int) $idAlamat;
+                } else {
+                    $pdo->prepare("INSERT INTO alamat_pembeli
+                        (id_pembeli, nama_jalan, rt_rw, no_rumah, kelurahan, kecamatan, kota_kabupaten, patokan)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+                        ->execute([$idPembeli, $alamat['nama_jalan'], $rtrw, $alamat['no_rumah'],
+                                   $alamat['kelurahan'], $alamat['kecamatan'], $alamat['kota_kabupaten'],
+                                   $alamat['patokan'] !== '' ? $alamat['patokan'] : null]);
+                    $idAlamat = (int) $pdo->lastInsertId();
+                }
             }
 
             $pdo->prepare("INSERT INTO pesanan

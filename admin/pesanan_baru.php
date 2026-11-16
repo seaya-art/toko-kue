@@ -18,6 +18,10 @@ $old = $_POST;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_cek();
+    $kunci = $_POST['kunci'] ?? '';
+    if (!preg_match('/^[a-f0-9]{32}$/', $kunci)) {
+    exit('Kunci tidak valid.');
+    }
 
     // nomor WA: buang selain angka, awalan 0 jadi 62
     $wa = preg_replace('/\D/', '', $_POST['no_wa'] ?? '');
@@ -25,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $wa = '62' . substr($wa, 1);
     }
     $nama    = trim($_POST['nama'] ?? '');
+    if (mb_strlen($nama) > 100) { $errors[] = 'Nama maksimal 100 karakter.'; }
     $tgl     = $_POST['tanggal_ambil'] ?? '';
     $jam     = $_POST['jam_ambil'] ?? '';
     $sumber  = $_POST['sumber'] ?? '';
@@ -48,8 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $d = DateTime::createFromFormat('Y-m-d', $tgl);
-    if (!$d || $d->format('Y-m-d') !== $tgl || $tgl < date('Y-m-d')) {
-        $errors[] = 'Tanggal ambil/antar tidak valid (minimal hari ini).';
+    if (!$d || $d->format('Y-m-d') !== $tgl || $tgl < date('Y-m-d')
+    || $tgl > date('Y-m-d', strtotime('+1 year'))) {
+    $errors[] = 'Tanggal harus antara hari ini dan satu tahun ke depan.';
     }
     if ($jam !== '' && !preg_match('/^\d{2}:\d{2}$/', $jam)) {
         $errors[] = 'Jam tidak valid.';
@@ -67,9 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idMenu = (int) $idMenu;
         if ($idMenu === 0) continue;
         $jml = (int) ($_POST['jumlah'][$i] ?? 0);
-        if (!isset($menuById[$idMenu]) || $jml < 1) {
-            $errors[] = 'Baris item ' . ($i + 1) . ' tidak valid.';
-            continue;
+        if (!isset($menuById[$idMenu]) || $jml < 1 || $jml > 500) {
+        $errors[] = 'Baris ' . ($i + 1) . ': pilih kue dan isi jumlah 1 sampai 500.';
+       continue;
         }
         $cat = mb_substr(trim($_POST['catatan_item'][$i] ?? ''), 0, 255);
         $items[] = [
@@ -92,12 +98,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $zonaDipakai = $idZona;
             $ongkir = (int) $zonaById[$idZona]['tarif'];
         } else {
-            $ongkir = max(0, (int) ($_POST['ongkir_manual'] ?? 0));
+            $ongkir = (int) ($_POST['ongkir_manual'] ?? 0);
+            if ($ongkir < 0 || $ongkir > 500000) {
+                $errors[] = 'Ongkir manual harus 0 sampai Rp500.000.';
+            }
         }
+
         foreach (['nama_jalan', 'rt', 'rw', 'no_rumah', 'kelurahan', 'kecamatan', 'kota_kabupaten', 'patokan'] as $f) {
             $alamat[$f] = trim($_POST[$f] ?? '');
             if ($f !== 'patokan' && $alamat[$f] === '') {
                 $errors[] = 'Alamat belum lengkap (' . $f . ').';
+            }
+            if (mb_strlen($alamat[$f]) > 80) {
+                $errors[] = "Kolom $f maksimal 80 karakter.";
             }
         }
     }
@@ -124,6 +137,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             $pdo->beginTransaction();
+
+            // pesanan lain menunggu di sini sampai transaksi ini selesai
+            $pdo->query("SELECT id_pengaturan FROM pengaturan LIMIT 1 FOR UPDATE");
+                $lewati = $_SESSION['peran'] === 'owner' && !empty($_POST['lewati_kuota']);
+                if (!$lewati && cek_kuota($pdo, $tgl, $items, $menuById)) {
+                throw new DomainException('kuota');
+            }
 
             if (!$idPembeli) {
                 $pdo->prepare("INSERT INTO pembeli (nama, no_wa) VALUES (?, ?)")->execute([$nama, $wa]);
@@ -159,12 +179,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
             header('Location: detail.php?id=' . $idPesanan);
             exit;
+                } catch (DomainException $e) {
+            $pdo->rollBack();
+            $kuotaPenuh = true;
+            $errors[] = 'Kuota baru saja terisi pesanan lain. Periksa tanggalnya lagi.';
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            if ($e->errorInfo[1] == 1062) {  // kunci sama: klik ganda
+                $stmt = $pdo->prepare("SELECT id_pesanan FROM pesanan WHERE kunci = ?");
+                $stmt->execute([$kunci]);
+                $idAda = $stmt->fetchColumn();
+                if ($idAda) {
+                    header('Location: detail.php?id=' . (int) $idAda);
+                    exit;
+                }
+            }
+            error_log($e->getMessage());
+            $errors[] = 'Gagal menyimpan pesanan.';
         } catch (Exception $e) {
             $pdo->rollBack();
-             $errors[] = 'Gagal menyimpan pesanan: ';
+            error_log($e->getMessage());
+            $errors[] = 'Gagal menyimpan pesanan.';
         }
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -181,7 +220,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p style="color:red"><?= h($e) ?></p>
   <?php endforeach; ?>
 
-  <form method="post">
+    <form method="post" onsubmit="this.querySelector('button[type=submit]').disabled = true">
+    <input type="hidden" name="kunci" value="<?= bin2hex(random_bytes(16)) ?>">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
 
     <h2>Pelanggan</h2>

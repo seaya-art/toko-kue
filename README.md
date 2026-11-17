@@ -36,4 +36,4 @@ Skema ada di `database/schema.sql`.
 - [x] Desain database
 - [x] Panel admin
 - [ ] Website pembeli
-- [ ] Laporan (Python)
+- [x] Laporan (Python)

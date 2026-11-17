@@ -14,6 +14,11 @@ RUPIAH = '"Rp"#,##0'
 TERBAYAR = """(SELECT id_pesanan, SUM(jumlah) AS terbayar
                FROM catatan_transaksi WHERE dibatalkan = 0 GROUP BY id_pesanan) t"""
 
+def aman_excel(nilai):
+    """Cegah teks dari database dibaca Excel sebagai rumus."""
+    if isinstance(nilai, str) and nilai[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + nilai
+    return nilai
 
 def hitung_periode(jenis, acuan):
     if jenis == "minggu":
@@ -38,7 +43,7 @@ def tulis_sheet(ws, kolom, baris, kolom_rupiah=()):
         c.fill = PatternFill("solid", fgColor="4F81BD")
         c.alignment = Alignment(horizontal="center")
     for b in baris:
-        ws.append(list(b))
+        ws.append([aman_excel(v) for v in b])
     for idx in kolom_rupiah:  # nomor kolom, mulai dari 1
         for row in ws.iter_rows(min_row=2, min_col=idx, max_col=idx):
             for cell in row:

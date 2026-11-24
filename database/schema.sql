@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 16, 2026 at 02:33 PM
+-- Generation Time: Nov 24, 2026 at 04:31 AM
 -- Server version: 10.11.16-MariaDB
 -- PHP Version: 8.4.27
 
@@ -167,6 +167,18 @@ CREATE TABLE `pengguna` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `percobaan_pesan`
+--
+
+CREATE TABLE `percobaan_pesan` (
+  `id` int(11) NOT NULL,
+  `ip` varchar(45) NOT NULL,
+  `waktu` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `pesanan`
 --
 
@@ -277,6 +289,13 @@ ALTER TABLE `pengguna`
   ADD UNIQUE KEY `username` (`username`);
 
 --
+-- Indexes for table `percobaan_pesan`
+--
+ALTER TABLE `percobaan_pesan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ip` (`ip`,`waktu`);
+
+--
 -- Indexes for table `pesanan`
 --
 ALTER TABLE `pesanan`
@@ -350,6 +369,12 @@ ALTER TABLE `pengaturan`
 --
 ALTER TABLE `pengguna`
   MODIFY `id_pengguna` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `percobaan_pesan`
+--
+ALTER TABLE `percobaan_pesan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `pesanan`

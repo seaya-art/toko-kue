@@ -57,7 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . $tujuan);
             exit;
         }
-
+    if (random_int(1, 50) === 1) {
+        $pdo->exec("DELETE FROM login_gagal WHERE waktu < (NOW() - INTERVAL 7 DAY)");
+        }
+        
         $pdo->prepare("INSERT INTO login_gagal (username, ip) VALUES (?, ?)")
             ->execute([$username, $ip]);
         $error = 'Username atau password salah.';

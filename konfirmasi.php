@@ -75,6 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Tanggal yang dipilih sudah lewat. Silakan ubah data pemesanan.';
     } else {
         $pdo->prepare("INSERT INTO percobaan_pesan (ip) VALUES (?)")->execute([$ip]);
+    if (random_int(1, 50) === 1) {
+        $pdo->exec("DELETE FROM percobaan_pesan WHERE waktu < (NOW() - INTERVAL 7 DAY)");
+        }
 
         try {
             $pdo->beginTransaction();

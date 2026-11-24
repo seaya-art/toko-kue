@@ -8,8 +8,9 @@ $sql = "SELECT p.id_pesanan, b.nama, p.tanggal_ambil, p.sumber,
                p.status_pesanan, p.status_bayar, p.total
         FROM pesanan p
         JOIN pembeli b ON b.id_pembeli = p.id_pembeli
-        ORDER BY p.tanggal_ambil ASC, p.id_pesanan ASC";
+        ORDER BY (p.status_pesanan = 'menunggu_konfirmasi') DESC, p.tanggal_ambil ASC, p.id_pesanan ASC";
 $pesanan = $pdo->query($sql)->fetchAll();
+$menunggu = (int) $pdo->query("SELECT COUNT(*) FROM pesanan WHERE status_pesanan = 'menunggu_konfirmasi'")->fetchColumn();
 
 $sqlBelum = "SELECT p.id_pesanan, b.nama, p.tanggal_ambil, p.status_bayar, p.total,
                     COALESCE((SELECT SUM(t.jumlah) FROM catatan_transaksi t
@@ -17,7 +18,7 @@ $sqlBelum = "SELECT p.id_pesanan, b.nama, p.tanggal_ambil, p.status_bayar, p.tot
              FROM pesanan p
              JOIN pembeli b ON b.id_pembeli = p.id_pembeli
              WHERE p.status_pesanan <> 'dibatalkan' AND p.status_bayar <> 'lunas'
-             ORDER BY p.tanggal_ambil ASC, p.id_pesanan ASC";
+             ORDER BY (p.status_pesanan = 'menunggu_konfirmasi') DESC, p.tanggal_ambil ASC, p.id_pesanan ASC";
 $belumLunas = $pdo->query($sqlBelum)->fetchAll();
 
 ?>
@@ -32,6 +33,9 @@ $belumLunas = $pdo->query($sqlBelum)->fetchAll();
   <p><a href="logout.php">Keluar</a></p>
   <p><a href="pesanan_baru.php">+ Pesanan baru</a></p>
   <h1>Daftar Pesanan</h1>
+<?php if ($menunggu > 0): ?>
+  <p><strong><?= $menunggu ?> pesanan menunggu konfirmasi</strong></p>
+<?php endif; ?>
   <div style="overflow-x:auto">
   <table border="1" cellpadding="6">
     <tr>

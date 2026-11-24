@@ -36,6 +36,13 @@ $zonaById = array_column($zona, null, 'id_zona');
 
 $min = date('Y-m-d', strtotime('+1 day'));
 $max = date('Y-m-d', strtotime('+90 days'));
+$diminta = [];
+foreach ($items as $it) {
+    $kat = $menuById[$it['id']]['kategori'];
+    $diminta[$kat] = ($diminta[$kat] ?? 0) + $it['jumlah'];
+}
+$penuh = tanggal_penuh($pdo, $min, $max, $diminta);
+$hari  = [1 => 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 $errors = [];
 $kuotaPenuh = false;
 $old = $_POST;
@@ -140,8 +147,31 @@ $waAdmin = preg_replace('/\D/', '', $cfg['wa_admin'] ?? '');
 
     <h2>Kapan dan bagaimana</h2>
     <p>Tanggal ambil/antar:
-      <input type="date" name="tanggal_ambil" min="<?= h($min) ?>" max="<?= h($max) ?>"
-             value="<?= h($old['tanggal_ambil'] ?? '') ?>" required></p>
+      <select name="tanggal_ambil" required>
+      <option value="">- pilih tanggal -</option>
+        <?php
+        $adaTersedia = false;
+        $akhirTgl = new DateTime($max);
+        for ($d = new DateTime($min); $d <= $akhirTgl; $d->modify('+1 day')):
+            $t = $d->format('Y-m-d');
+            $penuhIni = isset($penuh[$t]);
+            if (!$penuhIni) {
+                $adaTersedia = true;
+            }
+            $label = $hari[(int) $d->format('N')] . ', ' . $d->format('d-m-Y') . ($penuhIni ? ' (penuh)' : '');
+        ?>
+          <option value="<?= h($t) ?>"
+                  <?= $penuhIni ? 'disabled' : '' ?>
+                  <?= ($old['tanggal_ambil'] ?? '') === $t ? 'selected' : '' ?>><?= h($label) ?></option>
+        <?php endfor; ?>
+      </select>
+    </p>
+    <?php if (!$adaTersedia): ?>
+      <p style="color:red">Jumlah kue di keranjang melebihi kuota harian. Kurangi jumlahnya, atau hubungi admin.</p>
+    <?php endif; ?>
+    <?php if ($waAdmin !== ''): ?>
+      <p><small>Tanggal penuh? <a href="https://wa.me/<?= h($waAdmin) ?>?text=<?= rawurlencode('Halo, saya ingin tanya ketersediaan tanggal untuk pesanan kue.') ?>">Hubungi admin lewat WhatsApp</a></small></p>
+    <?php endif; ?>
     <p>Jam (opsional): <input type="time" name="jam_ambil" value="<?= h($old['jam_ambil'] ?? '') ?>"></p>
     <p>
       <select name="cara_pengiriman" id="cara">
